@@ -266,6 +266,6 @@ Se você encontrar algum problema ou tiver sugestões, abra uma issue no GitHub.
 
 ---
 
-**Desenvolvido com ❤️ por Tohsaka Rin**
+**Desenvolvido com ❤️ por Felipe Struchel**
 
 *Um bot de música Discord avançado, construído com TypeScript e arquitetura moderna.* 
