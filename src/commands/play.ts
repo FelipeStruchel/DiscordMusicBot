@@ -5,6 +5,7 @@ import youtubeDl from 'youtube-dl-exec';
 import { SpotifyService } from '../services/SpotifyService';
 import { getYoutubeDlOptions, simulateHumanBehavior } from '../utils/antiDetection';
 import { retryYoutubeDl, isRecoverableError } from '../utils/retry';
+import { shouldUseFallback, executeFallbackStrategy } from '../utils/fallback';
 
 export const data = new SlashCommandBuilder()
   .setName('play')
@@ -82,7 +83,7 @@ export async function execute(interaction: CommandInteraction, musicManager: Mus
               // Simular comportamento humano
               await simulateHumanBehavior();
               
-              const options = getYoutubeDlOptions();
+              const options = await getYoutubeDlOptions();
               return await youtubeDl.exec(youtubeUrl, {
                 ...options,
                 dumpSingleJson: true
@@ -101,12 +102,29 @@ export async function execute(interaction: CommandInteraction, musicManager: Mus
           } catch (error) {
             console.error('Erro ao obter info com youtube-dl:', error);
             
-            // Se for erro de bot detection, sugerir busca por nome
-            if (isRecoverableError(error)) {
-              return interaction.editReply('❌ YouTube detectou atividade automatizada. Tente buscar por nome da música em vez de usar URL direta.');
+            // Tentar estratégia de fallback
+            if (shouldUseFallback(error)) {
+              try {
+                console.log('🔄 Tentando estratégia de fallback...');
+                const fallbackResult = await executeFallbackStrategy(youtubeUrl, error);
+                
+                video = {
+                  video_details: {
+                    title: (fallbackResult as any).video_details?.title || (fallbackResult as any).title || 'Música encontrada via fallback',
+                    url: (fallbackResult as any).video_details?.url || (fallbackResult as any).url || youtubeUrl,
+                    durationInSec: (fallbackResult as any).video_details?.durationInSec || (fallbackResult as any).durationInSec || 0,
+                    thumbnails: [{ url: (fallbackResult as any).video_details?.thumbnails?.[0]?.url || (fallbackResult as any).thumbnails?.[0]?.url || '' }]
+                  }
+                };
+                
+                console.log('✅ Fallback executado com sucesso!');
+              } catch (fallbackError) {
+                console.error('❌ Fallback falhou:', fallbackError);
+                return interaction.editReply('❌ Não foi possível processar a URL. Tente buscar por nome da música.');
+              }
+            } else {
+              return interaction.editReply('❌ Erro ao processar URL do YouTube. Tente buscar por nome.');
             }
-            
-            return interaction.editReply('❌ Erro ao processar URL do YouTube. Tente buscar por nome.');
           }
         } else {
           // Buscar por nome

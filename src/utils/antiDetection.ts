@@ -1,5 +1,7 @@
 // Utilitários para evitar detecção de bot
 
+import { getPOToken } from './tokenGenerator';
+
 const userAgents = [
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
@@ -33,6 +35,20 @@ const acceptLanguages = [
   'es-ES,es;q=0.9,en;q=0.8'
 ];
 
+// Cookies para simular sessão de navegador
+const browserCookies = [
+  'CONSENT=YES+cb.20231231-07-p0.en+FX+{}',
+  'VISITOR_INFO1_LIVE=random_string',
+  'LOGIN_INFO=random_string',
+  'SID=random_string',
+  'HSID=random_string',
+  'SSID=random_string',
+  'APISID=random_string',
+  'SAPISID=random_string',
+  '__Secure-1PSID=random_string',
+  '__Secure-3PSID=random_string'
+];
+
 export function getRandomUserAgent(): string {
   return userAgents[Math.floor(Math.random() * userAgents.length)];
 }
@@ -50,10 +66,21 @@ export function getRandomDelay(): number {
   return Math.floor(Math.random() * 4000) + 1000;
 }
 
-export function getAntiDetectionHeaders(): string[] {
+export function getRandomCookies(): string {
+  const randomCookies = browserCookies
+    .sort(() => Math.random() - 0.5)
+    .slice(0, Math.floor(Math.random() * 5) + 3); // 3-7 cookies aleatórios
+  return randomCookies.join('; ');
+}
+
+export async function getAntiDetectionHeaders(): Promise<string[]> {
   const userAgent = getRandomUserAgent();
   const referer = getRandomReferer();
   const acceptLanguage = getRandomAcceptLanguage();
+  const cookies = getRandomCookies();
+  
+  // Obter POToken válido
+  const potoken = await getPOToken();
   
   return [
     `referer:${referer}`,
@@ -68,12 +95,14 @@ export function getAntiDetectionHeaders(): string[] {
     'sec-fetch-mode:navigate',
     'sec-fetch-site:same-origin',
     'sec-fetch-user:?1',
-    'cache-control:max-age=0'
+    'cache-control:max-age=0',
+    `cookie:${cookies}`,
+    `x-potoken:${potoken}`
   ];
 }
 
-export function getYoutubeDlOptions() {
-  const headers = getAntiDetectionHeaders();
+export async function getYoutubeDlOptions() {
+  const headers = await getAntiDetectionHeaders();
   
   return {
     format: 'bestaudio/best',
@@ -91,12 +120,9 @@ export function getYoutubeDlOptions() {
     noCheckCertificate: true,
     geoBypass: true,
     geoBypassCountry: 'US',
-    geoBypassIPBlock: '',
     extractorRetries: 3,
     maxDownloads: 1,
-    rateLimit: '100K', // Limitar taxa de download
-    maxSleepInterval: 5,
-    sleepInterval: 1
+    rateLimit: '100K' // Limitar taxa de download
   };
 }
 
@@ -116,4 +142,16 @@ export async function simulateHumanBehavior(): Promise<void> {
   // Simular pequenas pausas
   const microDelay = Math.random() * 1000;
   await new Promise(resolve => setTimeout(resolve, microDelay));
+}
+
+// Função para gerar IP aleatório (simulação)
+export function getRandomIP(): string {
+  const ips = [
+    '192.168.1.100',
+    '10.0.0.50',
+    '172.16.0.25',
+    '8.8.8.8',
+    '1.1.1.1'
+  ];
+  return ips[Math.floor(Math.random() * ips.length)];
 } 

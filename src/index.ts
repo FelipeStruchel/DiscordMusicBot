@@ -5,6 +5,7 @@ import { readdirSync } from 'fs';
 import { MusicManager } from './managers/MusicManager';
 import { initializeDatabase } from './database/connection';
 import { BirthdayNotificationService } from './services/BirthdayNotificationService';
+import { initializeTokenGenerator, cleanupTokenGenerator } from './utils/tokenGenerator';
 import play from 'play-dl';
 
 // Carregar variáveis de ambiente
@@ -77,6 +78,9 @@ client.once('ready', async () => {
   // Iniciar serviço de notificação de aniversários
   birthdayNotificationService.start();
   
+  // Inicializar gerador de tokens
+  await initializeTokenGenerator();
+  
   // Registrar comandos slash
   await registerCommands();
 });
@@ -86,6 +90,7 @@ client.on('disconnect', () => {
   console.log('Bot desconectado, limpando recursos...');
   musicManager.destroy();
   birthdayNotificationService.stop();
+  cleanupTokenGenerator();
 });
 
 // Evento de erro
@@ -98,6 +103,7 @@ process.on('SIGINT', () => {
   console.log('Desligando bot...');
   musicManager.destroy();
   birthdayNotificationService.stop();
+  cleanupTokenGenerator();
   client.destroy();
   process.exit(0);
 });

@@ -5,6 +5,7 @@ import youtubeDl from 'youtube-dl-exec';
 import { Collection } from 'discord.js';
 import { getYoutubeDlOptions, simulateHumanBehavior } from '../utils/antiDetection';
 import { retryYoutubeDl, isRecoverableError } from '../utils/retry';
+import { shouldUseFallback, executeFallbackStrategy } from '../utils/fallback';
 
 export interface Song {
   title: string;
@@ -125,7 +126,7 @@ export class MusicManager {
            stream = await retryYoutubeDl(async () => {
              await simulateHumanBehavior();
              
-             const options = getYoutubeDlOptions();
+             const options = await getYoutubeDlOptions();
              return youtubeDl.exec(videoUrl, {
                ...options,
                output: '-'
@@ -133,20 +134,43 @@ export class MusicManager {
            });
         } catch (error) {
           console.error('Erro ao processar música do Spotify:', error);
-          this.playNext(guildId); // Tentar próxima música
-          return;
+          
+          // Tentar fallback para Spotify
+          if (shouldUseFallback(error)) {
+            try {
+              console.log('🔄 Tentando fallback para Spotify...');
+              const fallbackResult = await executeFallbackStrategy(song.title, error);
+              const videoUrl = (fallbackResult as any).video_details?.url || (fallbackResult as any).url;
+              
+                             stream = await retryYoutubeDl(async () => {
+                 await simulateHumanBehavior();
+                 const options = await getYoutubeDlOptions();
+                 return youtubeDl.exec(videoUrl, {
+                   ...options,
+                   output: '-'
+                 });
+               });
+            } catch (fallbackError) {
+              console.error('❌ Fallback para Spotify falhou:', fallbackError);
+              this.playNext(guildId); // Tentar próxima música
+              return;
+            }
+          } else {
+            this.playNext(guildId); // Tentar próxima música
+            return;
+          }
         }
       } else {
-        // Para YouTube, usar youtube-dl diretamente com anti-detecção e retry
-        stream = await retryYoutubeDl(async () => {
-          await simulateHumanBehavior();
-          
-          const options = getYoutubeDlOptions();
-          return youtubeDl.exec(song.url, {
-            ...options,
-            output: '-'
-          });
-        });
+                 // Para YouTube, usar youtube-dl diretamente com anti-detecção e retry
+         stream = await retryYoutubeDl(async () => {
+           await simulateHumanBehavior();
+           
+           const options = await getYoutubeDlOptions();
+           return youtubeDl.exec(song.url, {
+             ...options,
+             output: '-'
+           });
+         });
       }
       
       if (!stream.stdout) {
@@ -169,6 +193,45 @@ export class MusicManager {
       console.log(`🎵 Tocando: ${song.title}`);
     } catch (error) {
       console.error('Erro ao reproduzir música:', error);
+      
+      // Tentar fallback para YouTube
+      if (shouldUseFallback(error)) {
+        try {
+          console.log('🔄 Tentando fallback para YouTube...');
+          const fallbackResult = await executeFallbackStrategy(song.url, error);
+          const videoUrl = (fallbackResult as any).video_details?.url || (fallbackResult as any).url;
+          
+                     const fallbackStream = await retryYoutubeDl(async () => {
+             await simulateHumanBehavior();
+             const options = await getYoutubeDlOptions();
+             return youtubeDl.exec(videoUrl, {
+               ...options,
+               output: '-'
+             });
+           });
+          
+          // Tentar reproduzir novamente com o fallback
+          if (fallbackStream.stdout) {
+            const resource = createAudioResource(fallbackStream.stdout, {
+              inlineVolume: true
+            });
+            
+            resource.volume?.setVolume(queue.volume / 100);
+            player.play(resource);
+            
+            const connection = this.connections.get(guildId);
+            if (connection) {
+              connection.subscribe(player);
+            }
+            
+            console.log(`🎵 Tocando (via fallback): ${song.title}`);
+            return;
+          }
+        } catch (fallbackError) {
+          console.error('❌ Fallback para YouTube falhou:', fallbackError);
+        }
+      }
+      
       this.playNext(guildId); // Tentar próxima música
     }
   }
