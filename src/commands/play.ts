@@ -81,7 +81,18 @@ export async function execute(interaction: CommandInteraction, musicManager: Mus
               noCheckCertificates: true,
               noWarnings: true,
               preferFreeFormats: true,
-              addHeader: ['referer:youtube.com', 'user-agent:googlebot']
+              addHeader: [
+                'referer:https://www.youtube.com/',
+                'user-agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'accept:text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'accept-language:en-US,en;q=0.5',
+                'accept-encoding:gzip, deflate',
+                'dnt:1',
+                'connection:keep-alive',
+                'upgrade-insecure-requests:1'
+              ],
+              sleepInterval: 1,
+              maxSleepInterval: 5
             });
             
             const videoInfoJson = JSON.parse(videoInfo.stdout);
