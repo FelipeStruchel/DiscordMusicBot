@@ -33,32 +33,6 @@ class VPNManager {
   }
 
   private loadVPNConfigs(): void {
-    // Configurações de proxy HTTP (mais simples de configurar)
-    this.vpnConfigs = [
-      // Proxies HTTP gratuitos (exemplos)
-      {
-        type: 'proxy',
-        config: 'http://proxy1.example.com:8080',
-        country: 'US',
-        server: 'proxy1.example.com',
-        port: 8080
-      },
-      {
-        type: 'proxy',
-        config: 'http://proxy2.example.com:3128',
-        country: 'NL',
-        server: 'proxy2.example.com',
-        port: 3128
-      },
-      {
-        type: 'proxy',
-        config: 'http://proxy3.example.com:80',
-        country: 'DE',
-        server: 'proxy3.example.com',
-        port: 80
-      }
-    ];
-
     // Carregar configurações do arquivo
     this.loadFromConfig();
   }
