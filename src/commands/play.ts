@@ -3,6 +3,8 @@ import { MusicManager, Song } from '../managers/MusicManager';
 import play from 'play-dl';
 import youtubeDl from 'youtube-dl-exec';
 import { SpotifyService } from '../services/SpotifyService';
+import { getYoutubeDlOptions, simulateHumanBehavior } from '../utils/antiDetection';
+import { retryYoutubeDl, isRecoverableError } from '../utils/retry';
 
 export const data = new SlashCommandBuilder()
   .setName('play')
@@ -74,25 +76,17 @@ export async function execute(interaction: CommandInteraction, musicManager: Mus
           }
           console.log('URL convertida:', youtubeUrl);
           
-          // Usar youtube-dl para obter informações
+          // Usar youtube-dl para obter informações com anti-detecção e retry
           try {
-            const videoInfo = await youtubeDl.exec(youtubeUrl, {
-              dumpSingleJson: true,
-              noCheckCertificates: true,
-              noWarnings: true,
-              preferFreeFormats: true,
-              addHeader: [
-                'referer:https://www.youtube.com/',
-                'user-agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'accept:text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                'accept-language:en-US,en;q=0.5',
-                'accept-encoding:gzip, deflate',
-                'dnt:1',
-                'connection:keep-alive',
-                'upgrade-insecure-requests:1'
-              ],
-              sleepInterval: 1,
-              maxSleepInterval: 5
+            const videoInfo = await retryYoutubeDl(async () => {
+              // Simular comportamento humano
+              await simulateHumanBehavior();
+              
+              const options = getYoutubeDlOptions();
+              return await youtubeDl.exec(youtubeUrl, {
+                ...options,
+                dumpSingleJson: true
+              });
             });
             
             const videoInfoJson = JSON.parse(videoInfo.stdout);
@@ -106,6 +100,12 @@ export async function execute(interaction: CommandInteraction, musicManager: Mus
             };
           } catch (error) {
             console.error('Erro ao obter info com youtube-dl:', error);
+            
+            // Se for erro de bot detection, sugerir busca por nome
+            if (isRecoverableError(error)) {
+              return interaction.editReply('❌ YouTube detectou atividade automatizada. Tente buscar por nome da música em vez de usar URL direta.');
+            }
+            
             return interaction.editReply('❌ Erro ao processar URL do YouTube. Tente buscar por nome.');
           }
         } else {

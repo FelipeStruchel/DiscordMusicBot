@@ -3,6 +3,8 @@ import { Client, Guild, GuildMember, VoiceChannel } from 'discord.js';
 import play from 'play-dl';
 import youtubeDl from 'youtube-dl-exec';
 import { Collection } from 'discord.js';
+import { getYoutubeDlOptions, simulateHumanBehavior } from '../utils/antiDetection';
+import { retryYoutubeDl, isRecoverableError } from '../utils/retry';
 
 export interface Song {
   title: string;
@@ -119,51 +121,31 @@ export class MusicManager {
           const video = searchResults[0];
           const videoUrl = (video as any).video_details?.url || (video as any).url;
           
-          // Usar youtube-dl para reproduzir a música do YouTube
-          stream = youtubeDl.exec(videoUrl, {
-            format: 'bestaudio/best',
-            noCheckCertificates: true,
-            noWarnings: true,
-            preferFreeFormats: true,
-            addHeader: [
-              'referer:https://www.youtube.com/',
-              'user-agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-              'accept:text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-              'accept-language:en-US,en;q=0.5',
-              'accept-encoding:gzip, deflate',
-              'dnt:1',
-              'connection:keep-alive',
-              'upgrade-insecure-requests:1'
-            ],
-            sleepInterval: 1,
-            maxSleepInterval: 5,
-            output: '-'
-          });
+                     // Usar youtube-dl para reproduzir a música do YouTube com anti-detecção e retry
+           stream = await retryYoutubeDl(async () => {
+             await simulateHumanBehavior();
+             
+             const options = getYoutubeDlOptions();
+             return youtubeDl.exec(videoUrl, {
+               ...options,
+               output: '-'
+             });
+           });
         } catch (error) {
           console.error('Erro ao processar música do Spotify:', error);
           this.playNext(guildId); // Tentar próxima música
           return;
         }
       } else {
-        // Para YouTube, usar youtube-dl diretamente
-        stream = youtubeDl.exec(song.url, {
-          format: 'bestaudio/best',
-          noCheckCertificates: true,
-          noWarnings: true,
-          preferFreeFormats: true,
-          addHeader: [
-            'referer:https://www.youtube.com/',
-            'user-agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'accept:text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-            'accept-language:en-US,en;q=0.5',
-            'accept-encoding:gzip, deflate',
-            'dnt:1',
-            'connection:keep-alive',
-            'upgrade-insecure-requests:1'
-          ],
-          sleepInterval: 1,
-          maxSleepInterval: 5,
-          output: '-'
+        // Para YouTube, usar youtube-dl diretamente com anti-detecção e retry
+        stream = await retryYoutubeDl(async () => {
+          await simulateHumanBehavior();
+          
+          const options = getYoutubeDlOptions();
+          return youtubeDl.exec(song.url, {
+            ...options,
+            output: '-'
+          });
         });
       }
       
