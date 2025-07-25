@@ -1,32 +1,25 @@
 {
   "vpns": [
     {
-      "type": "openvpn",
-      "config": "us1.freeopenvpn.org",
+      "type": "proxy",
+      "config": "59.29.182.162:8888",
+      "country": "KR",
+      "server": "59.29.182.162",
+      "port": 8888
+    },
+    {
+      "type": "proxy",
+      "config": "97.74.87.226:80",
+      "country": "SG",
+      "server": "97.74.87.226",
+      "port": 80
+    },
+    {
+      "type": "proxy",
+      "config": "54.219.186.252:9909",
       "country": "US",
-      "server": "us1.freeopenvpn.org",
-      "port": 1194
-    },
-    {
-      "type": "openvpn",
-      "config": "nl1.freeopenvpn.org",
-      "country": "NL",
-      "server": "nl1.freeopenvpn.org",
-      "port": 1194
-    },
-    {
-      "type": "wireguard",
-      "config": "wg0",
-      "country": "DE",
-      "server": "de1.wireguard.com",
-      "port": 51820
-    },
-    {
-      "type": "socks",
-      "config": "socks5://proxy1.example.com:1080",
-      "country": "CA",
-      "server": "proxy1.example.com",
-      "port": 1080
+      "server": "54.219.186.252",
+      "port": 9909
     }
   ],
   "settings": {
