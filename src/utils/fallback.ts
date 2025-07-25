@@ -72,7 +72,11 @@ export function shouldUseFallback(error: any): boolean {
     'Rate limit exceeded',
     'no such option',
     'exit code 2',
-    'exit code 1'
+    'exit code 1',
+    'Failed to extract any player response',
+    'IP has been blocked',
+    'Access denied',
+    'Forbidden'
   ];
   
   return fallbackTriggers.some(pattern => 

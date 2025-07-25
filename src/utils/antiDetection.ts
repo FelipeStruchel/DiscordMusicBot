@@ -1,6 +1,7 @@
 // Utilitários para evitar detecção de bot
 
 import { getPOToken } from './tokenGenerator';
+import { connectVPN, rotateVPN, isVPNConnected, testVPNConnection } from './vpnManager';
 
 const userAgents = [
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -103,6 +104,15 @@ export async function getAntiDetectionHeaders(): Promise<string[]> {
 
 export async function getYoutubeDlOptions() {
   const headers = await getAntiDetectionHeaders();
+  
+  // Verificar se VPN está conectada, se não, tentar conectar
+  if (!isVPNConnected()) {
+    console.log('🔄 Tentando conectar VPN...');
+    const vpnConnected = await connectVPN();
+    if (!vpnConnected) {
+      console.log('⚠️ Falha ao conectar VPN, continuando sem...');
+    }
+  }
   
   return {
     format: 'bestaudio/best',

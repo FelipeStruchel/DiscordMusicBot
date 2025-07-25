@@ -6,6 +6,9 @@ import { MusicManager } from './managers/MusicManager';
 import { initializeDatabase } from './database/connection';
 import { BirthdayNotificationService } from './services/BirthdayNotificationService';
 import { initializeTokenGenerator, cleanupTokenGenerator } from './utils/tokenGenerator';
+import { connectVPN, testVPNConnection, getCurrentVPN, disconnectVPN } from './utils/vpnManager';
+import { getRotationStats, setAutoRotate } from './utils/ipRotation';
+import { startVPNMonitoring, stopVPNMonitoring } from './utils/vpnMonitor';
 import play from 'play-dl';
 
 // Carregar variáveis de ambiente
@@ -81,16 +84,45 @@ client.once('ready', async () => {
   // Inicializar gerador de tokens
   await initializeTokenGenerator();
   
+  // Inicializar sistema VPN automaticamente
+  console.log('🔒 Inicializando sistema VPN...');
+  const vpnConnected = await connectVPN();
+  if (vpnConnected) {
+    console.log('✅ VPN conectada automaticamente');
+    const currentVPN = getCurrentVPN();
+    if (currentVPN) {
+      console.log(`🌐 VPN atual: ${currentVPN.server} (${currentVPN.country})`);
+    }
+  } else {
+    console.log('⚠️ VPN não conectada, continuando sem...');
+  }
+  
+  // Testar conexão
+  const connectionTest = await testVPNConnection();
+  if (connectionTest) {
+    console.log('✅ Conexão VPN testada e funcionando');
+  }
+  
+  // Habilitar rotação automática de IP
+  setAutoRotate(true);
+  console.log('🔄 Rotação automática de IP habilitada');
+  
+  // Iniciar monitoramento automático da VPN
+  startVPNMonitoring();
+  console.log('🔍 Monitoramento automático da VPN iniciado');
+  
   // Registrar comandos slash
   await registerCommands();
 });
 
 // Evento de desconexão
-client.on('disconnect', () => {
+client.on('disconnect', async () => {
   console.log('Bot desconectado, limpando recursos...');
   musicManager.destroy();
   birthdayNotificationService.stop();
   cleanupTokenGenerator();
+  stopVPNMonitoring();
+  await disconnectVPN();
 });
 
 // Evento de erro
@@ -99,19 +131,24 @@ client.on('error', (error) => {
 });
 
 // Tratamento de sinais para desligamento limpo
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
   console.log('Desligando bot...');
   musicManager.destroy();
   birthdayNotificationService.stop();
   cleanupTokenGenerator();
+  stopVPNMonitoring();
+  await disconnectVPN();
   client.destroy();
   process.exit(0);
 });
 
-process.on('SIGTERM', () => {
+process.on('SIGTERM', async () => {
   console.log('Desligando bot...');
   musicManager.destroy();
   birthdayNotificationService.stop();
+  cleanupTokenGenerator();
+  stopVPNMonitoring();
+  await disconnectVPN();
   client.destroy();
   process.exit(0);
 });

@@ -31,6 +31,14 @@ Um bot de música avançado para Discord desenvolvido em TypeScript, com suporte
 - **Sistema de tradução** integrado
 - **Comandos de utilidade**: ping, help
 
+### 🛡️ **Sistema Anti-Detecção Avançado**
+- **🎭 Simulação humana**: Headers aleatórios, delays, comportamento real
+- **🔑 POTokens**: Geração automática de tokens de autenticação
+- **🔄 Retry inteligente**: Tentativas com backoff exponencial
+- **🌐 Rotação de IP**: VPN automática para contornar IPs queimados
+- **📡 Monitoramento**: Verificação contínua da saúde da conexão
+- **🛡️ Fallback robusto**: Múltiplas estratégias de recuperação
+
 ## 🛠️ Tecnologias Utilizadas
 
 ### **Backend**
@@ -45,6 +53,12 @@ Um bot de música avançado para Discord desenvolvido em TypeScript, com suporte
 - **youtube-dl-exec** - Download e processamento de vídeos
 - **@discordjs/voice** - Sistema de voz do Discord
 - **FFmpeg** - Processamento de áudio
+
+### **Sistema Anti-Detecção**
+- **Puppeteer** - Geração de POTokens e cookies
+- **axios** - Requisições HTTP com proxy
+- **OpenVPN/WireGuard** - Rotação automática de IP
+- **Retry com backoff** - Recuperação inteligente de falhas
 
 ### **APIs Integradas**
 - **Spotify Web API** - Reprodução de músicas do Spotify
@@ -101,6 +115,32 @@ cp env.example .env
 ```
 
 Edite o arquivo `.env` com suas credenciais:
+
+### **4. Configuração da VPN (Opcional)**
+Para contornar IPs queimados, configure a VPN no arquivo `vpn-config.json`:
+
+```json
+{
+  "vpns": [
+    {
+      "type": "openvpn",
+      "config": "seu-servidor-vpn.ovpn",
+      "country": "US",
+      "server": "seu-servidor-vpn.com",
+      "port": 1194
+    }
+  ],
+  "settings": {
+    "autoRotate": true,
+    "rotationInterval": 15,
+    "maxFailuresBeforeRotation": 3,
+    "enableVPN": true,
+    "enableProxy": true
+  }
+}
+```
+
+**Nota**: O sistema VPN é **totalmente automático** e não requer comandos manuais.
 
 ```env
 # Token do Bot do Discord

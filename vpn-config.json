@@ -1,0 +1,39 @@
+{
+  "vpns": [
+    {
+      "type": "openvpn",
+      "config": "us1.freeopenvpn.org",
+      "country": "US",
+      "server": "us1.freeopenvpn.org",
+      "port": 1194
+    },
+    {
+      "type": "openvpn",
+      "config": "nl1.freeopenvpn.org",
+      "country": "NL",
+      "server": "nl1.freeopenvpn.org",
+      "port": 1194
+    },
+    {
+      "type": "wireguard",
+      "config": "wg0",
+      "country": "DE",
+      "server": "de1.wireguard.com",
+      "port": 51820
+    },
+    {
+      "type": "socks",
+      "config": "socks5://proxy1.example.com:1080",
+      "country": "CA",
+      "server": "proxy1.example.com",
+      "port": 1080
+    }
+  ],
+  "settings": {
+    "autoRotate": true,
+    "rotationInterval": 15,
+    "maxFailuresBeforeRotation": 3,
+    "enableVPN": true,
+    "enableProxy": true
+  }
+} 

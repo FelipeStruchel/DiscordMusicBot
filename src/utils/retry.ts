@@ -1,5 +1,7 @@
 // Sistema de retry com backoff exponencial
 
+import { handleIPFailure } from './ipRotation';
+
 export interface RetryOptions {
   maxAttempts: number;
   baseDelay: number;
@@ -27,7 +29,18 @@ export async function retryWithBackoff<T>(
     } catch (error) {
       lastError = error as Error;
       
+      // Verificar se é erro de IP queimado na última tentativa
       if (attempt === config.maxAttempts) {
+        const ipRotated = await handleIPFailure(error);
+        if (ipRotated) {
+          console.log('🔄 IP rotacionado, tentando novamente...');
+          // Tentar mais uma vez após rotação
+          try {
+            return await fn();
+          } catch (finalError) {
+            throw finalError;
+          }
+        }
         throw lastError;
       }
       
