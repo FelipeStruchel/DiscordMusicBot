@@ -7,19 +7,19 @@ interface TranslationResult {
 }
 
 export class TranslationService {
-  private email: string = 'felipegrego23@outlook.com';
+  private email: string | undefined;
   private baseUrl: string = 'https://api.mymemory.translated.net/get';
 
   constructor() {
-    // Email pode ser configurado via env
-    this.email = process.env.MYMEMORY_EMAIL || 'felipegrego23@outlook.com';
+    this.email = process.env.MYMEMORY_EMAIL;
   }
 
   // Traduzir texto
   async translate(text: string, targetLang: string, sourceLang?: string): Promise<TranslationResult> {
     try {
       const source = sourceLang || 'auto';
-      const url = `${this.baseUrl}?q=${encodeURIComponent(text)}&langpair=${source}|${targetLang}&de=${encodeURIComponent(this.email)}`;
+      const emailParam = this.email ? `&de=${encodeURIComponent(this.email)}` : '';
+      const url = `${this.baseUrl}?q=${encodeURIComponent(text)}&langpair=${source}|${targetLang}${emailParam}`;
       
       console.log(`🌐 Traduzindo: "${text}" de ${source} para ${targetLang}`);
       
