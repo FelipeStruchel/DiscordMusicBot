@@ -7,22 +7,9 @@ export const data = new SlashCommandBuilder()
 export async function execute(interaction: CommandInteraction) {
   const embed = new EmbedBuilder()
     .setColor('#0099ff')
-    .setTitle('🎵 Tohsaka Rin - Bot de Música')
+    .setTitle('Tohsaka Rin')
     .setDescription('Lista de todos os comandos disponíveis:')
     .addFields(
-      {
-        name: '🎵 Comandos de Música',
-        value: [
-          '`/play <música/URL>` - Reproduz uma música',
-          '`/pause` - Pausa a música atual',
-          '`/resume` - Retoma a música pausada',
-          '`/skip` - Pula para a próxima música',
-          '`/stop` - Para a reprodução e limpa a fila',
-          '`/queue` - Mostra a fila de músicas',
-          '`/volume <0-100>` - Ajusta o volume'
-        ].join('\n'),
-        inline: false
-      },
       {
         name: '🛠️ Comandos de Moderação',
         value: [
@@ -56,17 +43,6 @@ export async function execute(interaction: CommandInteraction) {
         inline: false
       },
       {
-        name: '🎂 Comandos de Aniversário',
-        value: [
-          '`/birthday add <dia> <mês> [ano]` - Adiciona seu aniversário',
-          '`/birthday remove` - Remove seu aniversário',
-          '`/birthday list` - Lista todos os aniversários',
-          '`/birthday today` - Aniversários de hoje',
-          '`/birthday upcoming [dias]` - Próximos aniversários'
-        ].join('\n'),
-        inline: false
-      },
-      {
         name: 'ℹ️ Comandos de Informação',
         value: [
           '`/serverinfo` - Informações do servidor',
@@ -77,11 +53,6 @@ export async function execute(interaction: CommandInteraction) {
         inline: false
       }
     )
-    .addFields({
-      name: '💡 Dica',
-      value: 'Você também pode usar comandos com prefixo `!` como `!play`, `!pause`, etc.',
-      inline: false
-    })
     .setFooter({ text: 'Desenvolvido com ❤️ por Felipe Struchel' })
     .setTimestamp();
 

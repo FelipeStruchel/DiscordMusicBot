@@ -10,5 +10,5 @@ declare module 'discord.js' {
 
 export interface Command {
   data: any;
-  execute: (interaction: CommandInteraction, musicManager: any) => Promise<void>;
-} 
+  execute: (interaction: CommandInteraction) => Promise<void>;
+}

@@ -35,9 +35,10 @@ Um bot de música avançado para Discord desenvolvido em TypeScript, com suporte
 - **🎭 Simulação humana**: Headers aleatórios, delays, comportamento real
 - **🔑 POTokens**: Geração automática de tokens de autenticação
 - **🔄 Retry inteligente**: Tentativas com backoff exponencial
-- **🌐 Rotação de IP**: VPN automática para contornar IPs queimados
+- **🌐 Rotação de IP**: Proxies dinâmicos do [free-proxy-list.net](https://free-proxy-list.net/pt)
 - **📡 Monitoramento**: Verificação contínua da saúde da conexão
 - **🛡️ Fallback robusto**: Múltiplas estratégias de recuperação
+- **🔄 Atualização automática**: Busca novos proxies a cada inicialização
 
 ## 🛠️ Tecnologias Utilizadas
 
@@ -57,7 +58,8 @@ Um bot de música avançado para Discord desenvolvido em TypeScript, com suporte
 ### **Sistema Anti-Detecção**
 - **Puppeteer** - Geração de POTokens e cookies
 - **axios** - Requisições HTTP com proxy
-- **OpenVPN/WireGuard** - Rotação automática de IP
+- **cheerio** - Parsing de HTML para busca de proxies
+- **Proxies dinâmicos** - Busca automática do [free-proxy-list.net](https://free-proxy-list.net/pt)
 - **Retry com backoff** - Recuperação inteligente de falhas
 
 ### **APIs Integradas**
@@ -116,18 +118,18 @@ cp env.example .env
 
 Edite o arquivo `.env` com suas credenciais:
 
-### **4. Configuração da VPN (Opcional)**
-Para contornar IPs queimados, configure a VPN no arquivo `vpn-config.json`:
+### **4. Configuração de Proxies Dinâmicos (Opcional)**
+O sistema busca proxies automaticamente do [free-proxy-list.net](https://free-proxy-list.net/pt). Configure no arquivo `vpn-config.json`:
 
 ```json
 {
   "vpns": [
     {
-      "type": "openvpn",
-      "config": "seu-servidor-vpn.ovpn",
+      "type": "proxy",
+      "config": "seu-proxy:porta",
       "country": "US",
-      "server": "seu-servidor-vpn.com",
-      "port": 1194
+      "server": "seu-proxy.com",
+      "port": 8080
     }
   ],
   "settings": {
@@ -135,12 +137,21 @@ Para contornar IPs queimados, configure a VPN no arquivo `vpn-config.json`:
     "rotationInterval": 15,
     "maxFailuresBeforeRotation": 3,
     "enableVPN": true,
-    "enableProxy": true
+    "enableProxy": true,
+    "dynamicProxyFetch": true,
+    "preferredCountries": ["US", "NL", "DE", "GB", "CA", "AU"],
+    "maxProxyAge": 60,
+    "testProxies": true
   }
 }
 ```
 
-**Nota**: O sistema VPN é **totalmente automático** e não requer comandos manuais.
+**Comandos disponíveis:**
+- `/proxy refresh` - Atualiza lista de proxies
+- `/proxy stats` - Mostra estatísticas
+- `/proxy current` - Mostra proxy atual
+
+**Nota**: O sistema é **totalmente automático** e busca novos proxies a cada inicialização.
 
 ```env
 # Token do Bot do Discord
@@ -219,6 +230,7 @@ npm start
 | `/serverinfo` | Info do servidor | `/serverinfo` |
 | `/userinfo` | Info do usuário | `/userinfo` |
 | `/ping` | Latência do bot | `/ping` |
+| `/proxy` | Gerencia proxies dinâmicos | `/proxy refresh/stats/current` |
 
 ### **🎲 Comandos de Entretenimento**
 | Comando | Descrição | Uso |
